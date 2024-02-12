@@ -2,6 +2,7 @@ package tsdb
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -16,7 +17,7 @@ type InfluxDBStore struct {
 
 func NewInfluxDBStore(url string, token string) InfluxDBStore {
 	options := influxdb2.DefaultOptions()
-	options.SetPrecision(time.Second)
+	options.SetPrecision(time.Nanosecond)
 	options.SetFlushInterval(5_000)
 	options.SetLogLevel(3)
 
@@ -41,6 +42,7 @@ func NewInfluxDBStore(url string, token string) InfluxDBStore {
 		|> range( start: 2024-02-05, stop: 2024-02-09)
 		|> filter(fn: (r) => r["_field"] == "bits")
 		|> filter(fn: (r) => r["index_num"] == "bb1-ngn.gv51.1001")
+		|> group (columns: ["index_num"])
 		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
 		`
 */
@@ -51,12 +53,21 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 
 	// build query string
 	var queryBuilder strings.Builder
+
 	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", bucket))
 	queryBuilder.WriteString(fmt.Sprintf("|> range( start: %s, stop: %s)\n", query.StartTime.Format(time.RFC3339), query.EndTime.Format(time.RFC3339)))
 	queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[\"_field\"] == %q)\n", query.Table))
+
 	for k, v := range query.Filters {
 		queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] == %q)\n", k, v))
 	}
+
+	// TODO: add "_measurement" and "_field" by default for groupBy key? or its upto query maker?
+	if len(query.GroupBy) > 0 {
+		groupKey, _ := json.Marshal(query.GroupBy)
+		queryBuilder.WriteString(fmt.Sprintf("|> group (columns: %s)\n", groupKey))
+	}
+
 	queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
 
 	result, err := queryAPI.Query(ctx, queryBuilder.String())
@@ -65,39 +76,53 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 		log.Fatalln(err)
 	}
 
-	returnReturn := make(TSDBQueryResult, 0, 10)
+	// caution: result.TableChanged() is not working for some reason that why we are using
+	// preTableId/currentTableId to implement the logic to figure out if table has changed
+	preTableId := -1
+	returnResult := make(TSDBQueryResult, 0, 10)
 
 	for result.Next() {
 		// Notice when group key has changed
 		if result.TableChanged() {
 			fmt.Printf("table: %s\n", result.TableMetadata().String())
+
 		}
 		record := result.Record()
+		currentTableId := record.Table()
 
-		tv := TimeValue{Time: record.Time().Unix(), Value: record.Value().(float64)}
+		//pretty.Print(record)
+		//println(preTableId, currentTableId)
 
-		labels := make(map[string]string)
-
-		for key, val_intf := range record.Values() {
-			switch val := val_intf.(type) {
-			case string:
-				labels[key] = val
-			default:
-				labels[key] = fmt.Sprintf("%v", val)
+		// new time series
+		if preTableId != currentTableId {
+			//fmt.Printf("\n\n*** new time series ***\n\n")
+			labels := make(map[string]string)
+			for key, val_intf := range record.Values() {
+				switch val := val_intf.(type) {
+				case string:
+					labels[key] = val
+				default:
+					labels[key] = fmt.Sprintf("%v", val)
+				}
 			}
+			returnResult = append(returnResult, TimeSeries{
+				Name:            record.Field() + "_" + record.Measurement(),
+				Labels:          labels,
+				TimeValueSeries: make([]TimeValue, 0, 10),
+			})
+			preTableId = currentTableId
 		}
 
-		returnReturn = append(returnReturn, TimeSeries{
-			Name:            record.Field() + "_" + record.Measurement(),
-			Labels:          labels,
-			TimeValueSeries: []TimeValue{tv},
-		})
-		//gfmt.Printf("value: %v, measurement: %v, field: %v, time: %v\n", result.Record().Values(), result.Record().Measurement(), result.Record().Field(), result.Record().Time())
+		// same TS: update the TSVals of the last element in
+		returnResult[len(returnResult)-1].TimeValueSeries = append(
+			returnResult[len(returnResult)-1].TimeValueSeries,
+			TimeValue{Time: record.Time().Unix(), Value: record.Value().(float64)},
+		)
+
 	}
-	// check for an error
 	if result.Err() != nil {
 		fmt.Printf("query parsing error: %s\n", result.Err().Error())
 	}
 
-	return returnReturn
+	return returnResult
 }

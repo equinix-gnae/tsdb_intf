@@ -2,6 +2,7 @@ package tsdb
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -38,11 +39,7 @@ func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]
 	queryBuilder.WriteString(query.Table)
 	queryBuilder.WriteString("{")
 	for k, v := range query.Filters {
-		queryBuilder.WriteString(k)
-		queryBuilder.WriteString("=")
-		queryBuilder.WriteString("\"")
-		queryBuilder.WriteString(v)
-		queryBuilder.WriteString("\"")
+		queryBuilder.WriteString(fmt.Sprintf("%s=%q, ", k, v))
 	}
 	queryBuilder.WriteString("}")
 
