@@ -43,6 +43,10 @@ func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]
 	}
 	queryBuilder.WriteString("}")
 
+	// caution: for prometheus/mimir step can't be 0/negative
+	// bad_data: invalid parameter "step": zero or negative query resolution step widths are not accepted.
+	// Try a positive intege
+
 	resp, err := r.Client.QueryRange(queryBuilder.String(), query.StartTime, query.EndTime, query.Step)
 
 	if err != nil {

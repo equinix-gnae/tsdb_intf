@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/equinix-gnae/tsdb_intf/pkg/tsdb"
@@ -10,19 +9,13 @@ import (
 )
 
 func main() {
-	location, err := time.LoadLocation("UTC")
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	query := tsdb.TSQuery{
 		Table:     "bits",
-		StartTime: time.Date(2024, time.February, 12, 0, 0, 0, 0, location),
-		EndTime:   time.Date(2024, time.February, 12, 10, 0, 0, 0, location),
-		Filters:   map[string]string{}, //map[string]string{"index_num": "bb1-ngn.gv51.1001"},
-		GroupBy:   []string{"index_num", "_measurement"},
-		Step:      time.Hour * 2,
+		StartTime: time.Date(2024, time.February, 12, 0, 0, 0, 0, time.UTC),
+		EndTime:   time.Date(2024, time.February, 13, 0, 0, 0, 0, time.UTC),
+		Filters:   map[string]string{"index_num": "bb1-ngn.gv51.1001"},
+		//GroupBy:   []string{"index_num", "_measurement"},
+		Step: time.Hour * 2,
 	}
 
 	// var tsdbStore1 tsdb.TSDBStore = tsdb.NewMimirDBStore("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")

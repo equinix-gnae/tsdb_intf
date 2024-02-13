@@ -68,7 +68,9 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 		queryBuilder.WriteString(fmt.Sprintf("|> group (columns: %s)\n", groupKey))
 	}
 
-	queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
+	if query.Step != 0 {
+		queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
+	}
 
 	result, err := queryAPI.Query(ctx, queryBuilder.String())
 

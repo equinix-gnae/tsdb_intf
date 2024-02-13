@@ -28,5 +28,5 @@ type TSQuery struct {
 	EndTime   time.Time         `json:"endTime"`
 	Step      time.Duration     `json:"step"`
 	Filters   map[string]string `json:"filters"`
-	GroupBy   []string          `jsone:"groupBy"` // used by influx to generate group key which common for TS
+	GroupBy   []string          `jsone:"groupBy"` // used by influx to generate group key which is common for a TS
 }
