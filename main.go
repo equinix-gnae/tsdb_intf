@@ -13,7 +13,7 @@ func main() {
 		Table:     "bits",
 		StartTime: time.Date(2024, time.February, 12, 0, 0, 0, 0, time.UTC),
 		EndTime:   time.Date(2024, time.February, 13, 0, 0, 0, 0, time.UTC),
-		Filters:   map[string]string{"index_num": "bb1-ngn.gv51.1001", "_measurement": ""},
+		Filters:   map[string]string{"index_num": "bb1-ngn.gv51.1001"},
 		GroupBy:   []string{"index_num", "_measurement"},
 		Step:      time.Hour * 2,
 	}
@@ -21,6 +21,6 @@ func main() {
 	// var tsdbStore1 tsdb.TSDBStore = tsdb.NewMimirDBStore("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
 	// pretty.Print(tsdbStore1.Query(context.Background(), query, map[string]any{"timeout": time.Second * 30}))
 
-	var tsdbStore2 tsdb.TSDBStore = tsdb.NewInfluxDBStore("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken")
-	pretty.Print(tsdbStore2.Query(context.Background(), query, map[string]any{"org": "primary", "bucket": "testing_script"}))
+	var tsdbStore2 tsdb.TSDBStore = tsdb.NewInfluxDBStore("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary")
+	pretty.Print(tsdbStore2.Query(context.Background(), query, map[string]any{}))
 }

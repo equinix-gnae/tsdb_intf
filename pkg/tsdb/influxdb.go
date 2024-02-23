@@ -13,9 +13,11 @@ import (
 
 type InfluxDBStore struct {
 	Client influxdb2.Client
+	Bucket string
+	Org    string
 }
 
-func NewInfluxDBStore(url string, token string) InfluxDBStore {
+func NewInfluxDBStore(url string, token string, bucket string, org string) InfluxDBStore {
 	options := influxdb2.DefaultOptions()
 	options.SetPrecision(time.Nanosecond)
 	options.SetFlushInterval(5_000)
@@ -33,7 +35,7 @@ func NewInfluxDBStore(url string, token string) InfluxDBStore {
 		log.Fatal("influx is not running")
 	}
 
-	return InfluxDBStore{Client: influxClient}
+	return InfluxDBStore{Client: influxClient, Bucket: bucket, Org: org}
 }
 
 /*
@@ -47,14 +49,12 @@ func NewInfluxDBStore(url string, token string) InfluxDBStore {
 		`
 */
 func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
-	// TODO: both bucket and org should moved to config file
-	queryAPI := r.Client.QueryAPI(opts["org"].(string))
-	bucket := opts["bucket"].(string)
+	queryAPI := r.Client.QueryAPI(r.Org)
 
 	// build query string
 	var queryBuilder strings.Builder
 
-	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", bucket))
+	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
 	queryBuilder.WriteString(fmt.Sprintf("|> range( start: %s, stop: %s)\n", query.StartTime.Format(time.RFC3339), query.EndTime.Format(time.RFC3339)))
 	queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[\"_field\"] == %q)\n", query.Table))
 
@@ -108,7 +108,7 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 				}
 			}
 			returnResult = append(returnResult, TimeSeries{
-				Name:            record.Field() + "_" + record.Measurement(),
+				//Name:            record.Field() + "_" + record.Measurement(),
 				Labels:          labels,
 				TimeValueSeries: make([]TimeValue, 0, 10),
 			})
