@@ -41,7 +41,7 @@ func NewInfluxDBStore(url string, token string, bucket string, org string) Influ
 func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
 	queryAPI := r.Client.QueryAPI(r.Org)
 
-	result, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
+	resp, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
 
 	if err != nil {
 		log.Fatalln(err)
@@ -52,13 +52,13 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 	preTableId := -1
 	returnResult := make(TSDBQueryResult, 0, 10)
 
-	for result.Next() {
+	for resp.Next() {
 		// Notice when group key has changed
-		if result.TableChanged() {
-			fmt.Printf("table: %s\n", result.TableMetadata().String())
+		if resp.TableChanged() {
+			fmt.Printf("table: %s\n", resp.TableMetadata().String())
 
 		}
-		record := result.Record()
+		record := resp.Record()
 		currentTableId := record.Table()
 
 		// new time series
@@ -86,8 +86,8 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 		)
 
 	}
-	if result.Err() != nil {
-		fmt.Printf("query parsing error: %s\n", result.Err().Error())
+	if resp.Err() != nil {
+		fmt.Printf("query parsing error: %s\n", resp.Err().Error())
 	}
 
 	return returnResult
