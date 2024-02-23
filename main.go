@@ -18,9 +18,9 @@ func main() {
 		Step:      time.Hour * 2,
 	}
 
-	// var tsdbStore1 tsdb.TSDBStore = tsdb.NewMimirDBStore("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
-	// pretty.Print(tsdbStore1.Query(context.Background(), query, map[string]any{"timeout": time.Second * 30}))
+	var tsdbStore1 tsdb.TSDBStore = tsdb.NewMimirDBStore("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
+	pretty.Print(tsdbStore1.Query(context.Background(), query, map[string]any{"timeout": time.Second * 30}))
 
-	var tsdbStore2 tsdb.TSDBStore = tsdb.NewInfluxDBStore("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary")
-	pretty.Print(tsdbStore2.Query(context.Background(), query, map[string]any{}))
+	// var tsdbStore2 tsdb.TSDBStore = tsdb.NewInfluxDBStore("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary")
+	// pretty.Print(tsdbStore2.Query(context.Background(), query, map[string]any{}))
 }

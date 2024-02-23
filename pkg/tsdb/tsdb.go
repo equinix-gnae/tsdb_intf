@@ -29,4 +29,5 @@ type TSQuery struct {
 
 type TSDBStore interface {
 	Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult
+	//GenerateQueryString(query TSQuery) string  // this is helpful in writing tests
 }

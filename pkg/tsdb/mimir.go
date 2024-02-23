@@ -25,29 +25,16 @@ func NewMimirDBStore(url string, id string) MimirDBStore {
 	return MimirDBStore{Client: mimirE2eClient}
 }
 
-/*
-	 Query String Example:
-		query := `bits{index_num="bb1-ngn.gv51.1001"}`
-*/
 func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
 	if timeout, ok := opts["timeout"]; ok {
 		r.Client.SetTimeout(timeout.(time.Duration))
 	}
 
-	// build query string
-	var queryBuilder strings.Builder
-	queryBuilder.WriteString(query.Table)
-	queryBuilder.WriteString("{")
-	for k, v := range query.Filters {
-		queryBuilder.WriteString(fmt.Sprintf("%s=%q, ", k, v))
-	}
-	queryBuilder.WriteString("}")
-
-	// caution: for prometheus/mimir step can't be 0/negative
+	// caution: for prometheus/mimir step can't be 0/negative otherwise we get following error:
 	// bad_data: invalid parameter "step": zero or negative query resolution step widths are not accepted.
 	// Try a positive intege
 
-	resp, err := r.Client.QueryRange(queryBuilder.String(), query.StartTime, query.EndTime, query.Step)
+	resp, err := r.Client.QueryRange(r.GenerateQueryString(query), query.StartTime, query.EndTime, query.Step)
 
 	if err != nil {
 		log.Fatalln(err)
@@ -62,8 +49,6 @@ func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]
 	if len(matrix) == 0 {
 		log.Fatalf("empty response is returned for query: %q", query)
 	}
-
-	//pretty.Print(matrix)
 
 	result := make(TSDBQueryResult, 0, len(matrix))
 
@@ -84,4 +69,22 @@ func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]
 		})
 	}
 	return result
+}
+
+/*
+	 Query String Example:
+		query := `bits{index_num="bb1-ngn.gv51.1001"}`
+*/
+func (r MimirDBStore) GenerateQueryString(query TSQuery) string {
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString(query.Table)
+	queryBuilder.WriteString("{")
+
+	for k, v := range query.Filters {
+		queryBuilder.WriteString(fmt.Sprintf("%s=%q, ", k, v))
+	}
+
+	queryBuilder.WriteString("}")
+
+	return queryBuilder.String()
 }

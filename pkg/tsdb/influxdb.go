@@ -38,41 +38,10 @@ func NewInfluxDBStore(url string, token string, bucket string, org string) Influ
 	return InfluxDBStore{Client: influxClient, Bucket: bucket, Org: org}
 }
 
-/*
-	 Query String Example:
-		query := `from(bucket: "testing_script")
-		|> range( start: 2024-02-05, stop: 2024-02-09)
-		|> filter(fn: (r) => r["_field"] == "bits")
-		|> filter(fn: (r) => r["index_num"] == "bb1-ngn.gv51.1001")
-		|> group (columns: ["index_num"])
-		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
-		`
-*/
 func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
 	queryAPI := r.Client.QueryAPI(r.Org)
 
-	// build query string
-	var queryBuilder strings.Builder
-
-	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
-	queryBuilder.WriteString(fmt.Sprintf("|> range( start: %s, stop: %s)\n", query.StartTime.Format(time.RFC3339), query.EndTime.Format(time.RFC3339)))
-	queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[\"_field\"] == %q)\n", query.Table))
-
-	for k, v := range query.Filters {
-		queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] == %q)\n", k, v))
-	}
-
-	// TODO: add "_measurement" and "_field" by default for groupBy key? or its upto query maker?
-	if len(query.GroupBy) > 0 {
-		groupKey, _ := json.Marshal(query.GroupBy)
-		queryBuilder.WriteString(fmt.Sprintf("|> group (columns: %s)\n", groupKey))
-	}
-
-	if query.Step != 0 {
-		queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
-	}
-
-	result, err := queryAPI.Query(ctx, queryBuilder.String())
+	result, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
 
 	if err != nil {
 		log.Fatalln(err)
@@ -122,4 +91,38 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 	}
 
 	return returnResult
+}
+
+/*
+	 Query String Example:
+		query := `from(bucket: "testing_script")
+		|> range( start: 2024-02-05, stop: 2024-02-09)
+		|> filter(fn: (r) => r["_field"] == "bits")
+		|> filter(fn: (r) => r["index_num"] == "bb1-ngn.gv51.1001")
+		|> group (columns: ["index_num"])
+		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
+		`
+*/
+func (r InfluxDBStore) GenerateQueryString(query TSQuery) string {
+	var queryBuilder strings.Builder
+
+	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
+	queryBuilder.WriteString(fmt.Sprintf("|> range( start: %s, stop: %s)\n", query.StartTime.Format(time.RFC3339), query.EndTime.Format(time.RFC3339)))
+	queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[\"_field\"] == %q)\n", query.Table))
+
+	for k, v := range query.Filters {
+		queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] == %q)\n", k, v))
+	}
+
+	// TODO: add "_measurement" and "_field" by default for groupBy key? or its upto query maker?
+	if len(query.GroupBy) > 0 {
+		groupKey, _ := json.Marshal(query.GroupBy)
+		queryBuilder.WriteString(fmt.Sprintf("|> group (columns: %s)\n", groupKey))
+	}
+
+	if query.Step != 0 {
+		queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
+	}
+
+	return queryBuilder.String()
 }
