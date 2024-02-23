@@ -92,12 +92,8 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 		record := result.Record()
 		currentTableId := record.Table()
 
-		//pretty.Print(record)
-		//println(preTableId, currentTableId)
-
 		// new time series
 		if preTableId != currentTableId {
-			//fmt.Printf("\n\n*** new time series ***\n\n")
 			labels := make(map[string]string)
 			for key, val_intf := range record.Values() {
 				switch val := val_intf.(type) {
@@ -108,7 +104,6 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 				}
 			}
 			returnResult = append(returnResult, TimeSeries{
-				//Name:            record.Field() + "_" + record.Measurement(),
 				Labels:          labels,
 				TimeValueSeries: make([]TimeValue, 0, 10),
 			})
