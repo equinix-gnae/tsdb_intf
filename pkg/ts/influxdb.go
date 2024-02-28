@@ -17,14 +17,8 @@ type InfluxDBStore struct {
 	Org    string
 }
 
-func NewInfluxDBStore(url string, token string, bucket string, org string) InfluxDBStore {
-	options := influxdb2.DefaultOptions()
-	options.SetPrecision(time.Nanosecond)
-	options.SetFlushInterval(5_000)
-	options.SetLogLevel(3)
-
+func NewInfluxDBStore(url string, token string, bucket string, org string, options *influxdb2.Options) InfluxDBStore {
 	influxClient := influxdb2.NewClientWithOptions(url, token, options)
-
 	running, err := influxClient.Ping(context.Background())
 
 	if err != nil {
