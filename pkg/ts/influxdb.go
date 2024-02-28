@@ -1,4 +1,4 @@
-package tsdb
+package ts
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func NewInfluxDBStore(url string, token string, bucket string, org string) Influ
 	return InfluxDBStore{Client: influxClient, Bucket: bucket, Org: org}
 }
 
-func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
+func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSQueryResult {
 	queryAPI := r.Client.QueryAPI(r.Org)
 
 	resp, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
@@ -50,7 +50,7 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 	// caution: result.TableChanged() is not working for some reason that why we are using
 	// preTableId/currentTableId to implement the logic to figure out if table has changed
 	preTableId := -1
-	returnResult := make(TSDBQueryResult, 0, 10)
+	returnResult := make(TSQueryResult, 0, 10)
 
 	for resp.Next() {
 		// Notice when group key has changed

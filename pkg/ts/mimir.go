@@ -1,4 +1,4 @@
-package tsdb
+package ts
 
 import (
 	"context"
@@ -24,7 +24,7 @@ func NewMimirDBStore(url string, id string) MimirDBStore {
 	return MimirDBStore{Client: mimirE2eClient}
 }
 
-func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
+func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSQueryResult {
 	// XXX: handle the case where client is shared b/w goroutines?
 	r.Client.SetTimeout(query.Timeout)
 
@@ -48,7 +48,7 @@ func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]
 		log.Fatalf("empty response is returned for query: %q", query)
 	}
 
-	result := make(TSDBQueryResult, 0, len(matrix))
+	result := make(TSQueryResult, 0, len(matrix))
 
 	for _, sampleStream := range matrix {
 		labels := make(map[string]string)

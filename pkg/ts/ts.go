@@ -1,4 +1,4 @@
-package tsdb
+package ts
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type TimeSeries struct {
 	TimeValueSeries []TimeValue       `json:"timeValueSeries"`
 }
 
-type TSDBQueryResult []TimeSeries
+type TSQueryResult []TimeSeries
 
 type TSQuery struct {
 	Table     string            `json:"table"`   // for prometheus the table is metric name, for influx the table is _field
@@ -29,6 +29,6 @@ type TSQuery struct {
 }
 
 // read-only
-type TSDBStore interface {
-	Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult
+type TSStore interface {
+	Query(ctx context.Context, query TSQuery, opts map[string]any) TSQueryResult
 }
