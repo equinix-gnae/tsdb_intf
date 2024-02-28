@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/grafana/mimir/integration/e2emimir"
 	"github.com/prometheus/common/model"
@@ -26,9 +25,8 @@ func NewMimirDBStore(url string, id string) MimirDBStore {
 }
 
 func (r MimirDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSDBQueryResult {
-	if timeout, ok := opts["timeout"]; ok {
-		r.Client.SetTimeout(timeout.(time.Duration))
-	}
+	// XXX: handle the case where client is shared b/w goroutines?
+	r.Client.SetTimeout(query.Timeout)
 
 	// caution: for prometheus/mimir step can't be 0/negative otherwise we get following error:
 	// bad_data: invalid parameter "step": zero or negative query resolution step widths are not accepted.

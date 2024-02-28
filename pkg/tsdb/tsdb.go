@@ -19,12 +19,13 @@ type TimeSeries struct {
 type TSDBQueryResult []TimeSeries
 
 type TSQuery struct {
-	Table     string            `json:"table"` // for prometheus the table is metric name, for influx the table is _field
+	Table     string            `json:"table"`   // for prometheus the table is metric name, for influx the table is _field
+	Filters   map[string]string `json:"filters"` // for prometheus filters are kv lables, for influx they are `where` clause
+	GroupBy   []string          `json:"groupBy"` // used by influx to generate group key which is common for a TS
 	StartTime time.Time         `json:"startTime"`
 	EndTime   time.Time         `json:"endTime"`
 	Step      time.Duration     `json:"step"`
-	Filters   map[string]string `json:"filters"`  // for prometheus filters are kv lables, for influx they are `where` clause
-	GroupBy   []string          `jsone:"groupBy"` // used by influx to generate group key which is common for a TS
+	Timeout   time.Duration     `json:"timeout"`
 }
 
 // read-only
