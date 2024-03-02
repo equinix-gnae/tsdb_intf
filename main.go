@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/kr/pretty"
 	// influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
@@ -22,17 +23,17 @@ func main() {
 	}
 
 	// *** prometheus ***
-	var tsdbStore ts.TSStore = ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")
+	//var tsdbStore ts.TSStore = ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")
 
 	// *** mimir ***
 	//var tsdbStore ts.TSStore = ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
 
 	// *** influx ***
 
-	// options := influxdb2.DefaultOptions()
-	// options.SetFlushInterval(5_000)
-	// options.SetLogLevel(3)
-	// var tsdbStore ts.TSStore = ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)
+	options := influxdb2.DefaultOptions()
+	options.SetFlushInterval(5_000)
+	options.SetLogLevel(3)
+	var tsdbStore ts.TSStore = ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)
 
 	// *** query ***
 

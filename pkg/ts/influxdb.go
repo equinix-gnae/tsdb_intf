@@ -33,9 +33,12 @@ func NewInfluxDBClient(url string, token string, bucket string, org string, opti
 }
 
 func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
-	queryAPI := r.Client.QueryAPI(r.Org)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, query.Timeout)
+	defer cancel()
 
-	resp, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
+	strQuery := r.GenerateQueryString(query)
+	queryAPI := r.Client.QueryAPI(r.Org)
+	resp, err := queryAPI.Query(ctxWithTimeout, strQuery)
 
 	if err != nil {
 		return nil, err
@@ -76,12 +79,12 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 		// same TS: update the TSVals of the last element in
 		returnResult[len(returnResult)-1].TimeValueSeries = append(
 			returnResult[len(returnResult)-1].TimeValueSeries,
-			TimeValue{Time: record.Time().Unix(), Value: record.Value().(float64)},
+			TimeValue{Time: record.Time().UnixMilli(), Value: record.Value().(float64)},
 		)
 
 	}
 	if resp.Err() != nil {
-		return nil, fmt.Errorf("query parsing error: %s", resp.Err().Error())
+		return nil, fmt.Errorf("for query %q, query parsing error: %s", strQuery, resp.Err().Error())
 
 	}
 

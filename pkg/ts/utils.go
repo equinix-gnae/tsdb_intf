@@ -35,10 +35,6 @@ func PromQueryResultToTS(promQueryResult model.Value, strQuery string) (TSQueryR
 		return nil, fmt.Errorf("for query %q, empty response is returned", strQuery)
 	}
 
-	// caution: for prometheus/mimir step can't be 0/negative otherwise we get following error:
-	// bad_data: invalid parameter "step": zero or negative query resolution step widths are not accepted.
-	// Try a positive integer
-
 	result := make(TSQueryResult, 0, len(matrix))
 
 	for _, sampleStream := range matrix {

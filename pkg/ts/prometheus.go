@@ -14,11 +14,12 @@ type PrometheusClient struct {
 
 func NewPrometheusClient(url string) PrometheusClient {
 	cfg := api.Config{Address: url}
-
 	httpClient, err := api.NewClient(cfg)
+
 	if err != nil {
 		log.Fatalf("get httpClient failed: %+v", err)
 	}
+
 	v1API := v1.NewAPI(httpClient)
 
 	if err != nil {
@@ -29,9 +30,9 @@ func NewPrometheusClient(url string) PrometheusClient {
 }
 
 func (r PrometheusClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
+	// XXX: handle timeout
 	Range := v1.Range{Start: query.StartTime, End: query.EndTime, Step: query.Step}
 	strQuery := GeneratePromQueryString(query)
-
 	resp, warn, err := r.Client.QueryRange(ctx, strQuery, Range)
 
 	if err != nil {
