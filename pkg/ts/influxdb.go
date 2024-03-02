@@ -11,13 +11,13 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
-type InfluxDBStore struct {
+type InfluxDBClient struct {
 	Client influxdb2.Client
 	Bucket string
 	Org    string
 }
 
-func NewInfluxDBStore(url string, token string, bucket string, org string, options *influxdb2.Options) InfluxDBStore {
+func NewInfluxDBClient(url string, token string, bucket string, org string, options *influxdb2.Options) InfluxDBClient {
 	influxClient := influxdb2.NewClientWithOptions(url, token, options)
 	running, err := influxClient.Ping(context.Background())
 
@@ -29,16 +29,16 @@ func NewInfluxDBStore(url string, token string, bucket string, org string, optio
 		log.Fatal("influx is not running")
 	}
 
-	return InfluxDBStore{Client: influxClient, Bucket: bucket, Org: org}
+	return InfluxDBClient{Client: influxClient, Bucket: bucket, Org: org}
 }
 
-func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string]any) TSQueryResult {
+func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
 	queryAPI := r.Client.QueryAPI(r.Org)
 
 	resp, err := queryAPI.Query(ctx, r.GenerateQueryString(query))
 
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	// caution: result.TableChanged() is not working for some reason that why we are using
@@ -81,10 +81,11 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 
 	}
 	if resp.Err() != nil {
-		fmt.Printf("query parsing error: %s\n", resp.Err().Error())
+		return nil, fmt.Errorf("query parsing error: %s", resp.Err().Error())
+
 	}
 
-	return returnResult
+	return returnResult, nil
 }
 
 /*
@@ -97,7 +98,7 @@ func (r InfluxDBStore) Query(ctx context.Context, query TSQuery, opts map[string
 		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
 		`
 */
-func (r InfluxDBStore) GenerateQueryString(query TSQuery) string {
+func (r InfluxDBClient) GenerateQueryString(query TSQuery) string {
 	var queryBuilder strings.Builder
 
 	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
