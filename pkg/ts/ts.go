@@ -30,5 +30,5 @@ type TSQuery struct {
 
 // read-only
 type TSStore interface {
-	Query(ctx context.Context, query TSQuery, opts map[string]any) TSQueryResult
+	Query(ctx context.Context, query TSQuery) (TSQueryResult, error)
 }
