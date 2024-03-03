@@ -7,10 +7,7 @@ import (
 	"github.com/prometheus/common/model"
 )
 
-/*
-	 Query String Example:
-		query := `bits{index_num="bb1-ngn.gv51.1001"}`
-*/
+// Query String Example => query := `bits{index_num="bb1-ngn.gv51.1001"}`
 func GeneratePromQueryString(query TSQuery) string {
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString(query.Table)
