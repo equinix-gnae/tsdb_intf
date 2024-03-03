@@ -5,5 +5,24 @@
     * Right now all the implementation are only returning time in milliseconds.
 * add funtions like rate(prometheus)/non-negative-derative option.
 
-# TODO
-* add tests
+# run tests
+
+## Prometheuse
+```bash
+go test tests/tsdb_test.go -v -run TestPrometheus
+```
+
+## Mimir
+```bash
+go test tests/tsdb_test.go -v -run TestMimir
+```
+
+## InfluxDB
+```bash
+go test tests/tsdb_test.go -v -run TestInfluxDB
+```
+
+## All in one Test
+```bash
+go test tests/tsdb_test.go -v -run TestAllTSDBs
+```
