@@ -21,7 +21,6 @@ var baseQuery = ts.TSQuery{
 }
 
 func TestPrometheus(t *testing.T) {
-
 	tsdb := ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")
 
 	if result, err := tsdb.Query(context.Background(), baseQuery); err != nil {
@@ -60,17 +59,23 @@ func TestAllTSDBs(t *testing.T) {
 	options.SetFlushInterval(5_000)
 	options.SetLogLevel(3)
 
-	tsdbs := []ts.TSStore{
-		ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090"),
-		ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry"),
-		ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options),
+	tsdbs := []struct {
+		name string
+		db   ts.TSStore
+	}{
+		{name: "Prometheus", db: ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")},
+		{name: "Mimir", db: ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
+		{name: "InfluxDB", db: ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)},
 	}
 
 	for _, tsdb := range tsdbs {
-		if result, err := tsdb.Query(context.Background(), baseQuery); err != nil {
-			t.Errorf("got an error: %v", err)
-		} else {
-			pretty.Print(result)
-		}
+		t.Run(tsdb.name, func(t *testing.T) {
+			if result, err := tsdb.db.Query(context.Background(), baseQuery); err != nil {
+				t.Errorf("got an error: %v", err)
+			} else {
+				pretty.Print(result)
+			}
+		})
+
 	}
 }
