@@ -11,8 +11,8 @@ type MimirClient struct {
 	Client *e2emimir.Client
 }
 
-func NewMimirClient(url string, id string) MimirClient {
-	mimirE2eClient, err := e2emimir.NewClient("", url, "", "", id)
+func NewMimirClient(address string, id string) MimirClient {
+	mimirE2eClient, err := e2emimir.NewClient("", address, "", "", id)
 
 	if err != nil {
 		log.Fatalln(err)
