@@ -61,7 +61,7 @@ func TestAllTSDBs(t *testing.T) {
 
 	tsdbs := []struct {
 		name string
-		db   ts.TSStore
+		db   ts.TSSB
 	}{
 		{name: "Prometheus", db: ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")},
 		{name: "Mimir", db: ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
