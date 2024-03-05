@@ -26,3 +26,18 @@ go test tests/tsdb_test.go -v -run TestInfluxDB
 ```bash
 go test tests/tsdb_test.go -v -run TestAllTSDBs
 ```
+
+# Import guide
+Due to https://stackoverflow.com/questions/32232655/go-get-results-in-terminal-prompts-disabled-error-for-github-private-repo
+
+Configure go get to authenticate and fetch over https, all you need to do is to add the following line to $HOME/.netrc
+
+```bash
+machine github.com login USERNAME password TOKEN
+```
+
+Since its a private repo, its good not to cache it
+
+```bash
+go env -w GOPRIVATE=github.com/equinix-gnae/*
+```
