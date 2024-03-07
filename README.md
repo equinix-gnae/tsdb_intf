@@ -36,8 +36,9 @@ Configure go get to authenticate and fetch over https, all you need to do is to 
 machine github.com login USERNAME password TOKEN
 ```
 
-Since its a private repo, its good not to cache it
+Since its a private repo, its good not to cache it in proxy
 
 ```bash
 go env -w GOPRIVATE=github.com/equinix-gnae/*
+go env -w GOPRIVATE=github.com/equinix-nspa/*
 ```
