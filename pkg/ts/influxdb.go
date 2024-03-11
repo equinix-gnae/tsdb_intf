@@ -61,13 +61,8 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 		// new time series
 		if preTableId != currentTableId {
 			labels := make(map[string]string)
-			for key, val_intf := range record.Values() {
-				switch val := val_intf.(type) {
-				case string:
-					labels[key] = val
-				default:
-					labels[key] = fmt.Sprintf("%v", val)
-				}
+			for key, val := range record.Values() {
+				labels[key] = fmt.Sprintf("%v", val)
 			}
 			returnResult = append(returnResult, TimeSeries{
 				Labels:          labels,

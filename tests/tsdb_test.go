@@ -43,7 +43,6 @@ func TestMimir(t *testing.T) {
 
 func TestInfluxDB(t *testing.T) {
 	options := influxdb2.DefaultOptions()
-	options.SetFlushInterval(5_000)
 	options.SetLogLevel(3)
 	tsdb := ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)
 
