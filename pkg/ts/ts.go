@@ -2,7 +2,12 @@ package ts
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
+
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	"github.com/spf13/viper"
 )
 
 type TimeValue struct {
@@ -34,4 +39,24 @@ type TSQuery struct {
 // read-only
 type TSDB interface {
 	Query(ctx context.Context, query TSQuery) (TSQueryResult, error)
+}
+
+func CreateNewTSDBClient(config *Config) (TSDB, error) {
+	switch config.Name {
+	case "prometheus":
+		return NewPrometheusClient(config.URL), nil
+	case "mimir":
+		return NewMimirClient(config.URL, config.Org), nil
+	case "influxDB":
+		// TODO: need to pass client speicific options as well
+		return NewInfluxDBClient(config.URL, config.Secret, config.Database, config.Org, influxdb2.DefaultOptions()), nil
+	default:
+		return nil, fmt.Errorf("unsupported config name: %q", config.Name)
+	}
+}
+
+func init() {
+	v := viper.GetViper()
+	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	v.AutomaticEnv()
 }
