@@ -20,7 +20,7 @@ func TestConfig(t *testing.T) {
 
 func TestTSDBObjUsingConfig(t *testing.T) {
 	config := ts.ConfigFromViper(v)
-	tsdb, err := ts.CreateNewTSDBClient(&config)
+	tsdb, err := ts.NewTSDBClient(&config)
 
 	if err != nil {
 		t.Errorf("got an error: %v", err)

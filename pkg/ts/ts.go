@@ -41,7 +41,7 @@ type TSDB interface {
 	Query(ctx context.Context, query TSQuery) (TSQueryResult, error)
 }
 
-func CreateNewTSDBClient(config *Config) (TSDB, error) {
+func NewTSDBClient(config *Config) (TSDB, error) {
 	switch config.Name {
 	case "prometheus":
 		return NewPrometheusClient(config.URL), nil
