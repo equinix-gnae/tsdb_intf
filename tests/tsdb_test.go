@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/equinix-nspa/tsdb_intf/pkg/ts"
+	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/kr/pretty"
 )

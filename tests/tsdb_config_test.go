@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/equinix-nspa/tsdb_intf/pkg/ts"
+	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	"github.com/kr/pretty"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"

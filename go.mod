@@ -1,4 +1,4 @@
-module github.com/equinix-nspa/tsdb_intf
+module github.com/equinix-gnae/tsdb_intf
 
 go 1.21.5
 
