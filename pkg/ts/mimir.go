@@ -28,7 +28,7 @@ func (r MimirClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, e
 	resp, err := r.Client.QueryRange(strQuery, query.StartTime, query.EndTime, query.Step)
 
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
 	return PromQueryResultToTS(resp, strQuery)
