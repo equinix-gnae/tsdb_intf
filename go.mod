@@ -1,6 +1,6 @@
 module github.com/equinix-gnae/tsdb_intf
 
-go 1.21.5
+go 1.21.3
 
 require (
 	github.com/grafana/mimir v0.0.0-20240104161956-9f2a79afb8fe

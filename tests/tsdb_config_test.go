@@ -26,7 +26,7 @@ func TestTSDBObjUsingConfig(t *testing.T) {
 		t.Errorf("got an error: %v", err)
 	}
 
-	if result, err := tsdb.Query(context.Background(), baseQuery); err != nil {
+	if result, err := tsdb.Query(context.Background(), BaseQuery); err != nil {
 		t.Errorf("got an error: %v", err)
 	} else {
 		pretty.Print(result)
