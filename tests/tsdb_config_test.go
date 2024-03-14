@@ -13,9 +13,14 @@ import (
 
 var v = viper.GetViper()
 
+const (
+	url string = "http://mgmtsrv1.sv11.edn.equinix.com:32090"
+)
+
 func TestConfig(t *testing.T) {
 	config := ts.ConfigFromViper(v)
-	assert.Equal(t, "mimir", config.Name, "make sure to run the test with TSDB_NAME=mimir env set")
+	assert.Equal(t, "prometheus", config.Name)
+	assert.Equal(t, url, config.URL)
 }
 
 func TestTSDBObjUsingConfig(t *testing.T) {
@@ -34,5 +39,6 @@ func TestTSDBObjUsingConfig(t *testing.T) {
 }
 
 func init() {
+	v.SetDefault("tsdb.url", url)
 	ts.MustViperFlags(v, &pflag.FlagSet{})
 }
