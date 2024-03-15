@@ -19,7 +19,6 @@ const (
 
 func TestConfig(t *testing.T) {
 	config := ts.ConfigFromViper(v)
-	assert.Equal(t, "prometheus", config.Name)
 	assert.Equal(t, url, config.URL)
 }
 

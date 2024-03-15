@@ -33,10 +33,7 @@ func (r PrometheusClient) Query(ctx context.Context, query TSQuery) (TSQueryResu
 	Range := v1.Range{Start: query.StartTime, End: query.EndTime, Step: query.Step}
 	strQuery := GeneratePromQueryString(query)
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, query.Timeout)
-	defer cancel()
-
-	resp, warn, err := r.Client.QueryRange(ctxWithTimeout, strQuery, Range)
+	resp, warn, err := r.Client.QueryRange(ctx, strQuery, Range, v1.WithTimeout(query.Timeout))
 
 	if err != nil {
 		return nil, err
