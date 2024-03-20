@@ -39,5 +39,7 @@ func TestTSDBObjUsingConfig(t *testing.T) {
 
 func init() {
 	v.SetDefault("tsdb.url", url)
+	v.SetDefault("tsdb.id", "")
+	v.SetDefault("tsdb.secret", "")
 	ts.MustViperFlags(v, &pflag.FlagSet{})
 }

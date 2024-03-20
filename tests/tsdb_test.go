@@ -12,16 +12,16 @@ import (
 
 var BaseQuery = ts.TSQuery{
 	Table:     "bits",
-	StartTime: time.Date(2024, time.February, 29, 0, 0, 0, 0, time.UTC),
-	EndTime:   time.Date(2024, time.March, 1, 0, 0, 0, 0, time.UTC),
-	Filters:   map[string]string{"index_num": "bb1-ngn.gv51.1001"},
+	StartTime: time.Now().Add(-1 * time.Hour),
+	EndTime:   time.Now().UTC(),
+	Filters:   map[string]string{"index_num": "use4-ngn.gv52.4"},
 	GroupBy:   []string{"index_num", "_measurement"},
-	Step:      time.Hour * 2,
+	Step:      time.Minute * 5,
 	Timeout:   time.Second * 30,
 }
 
 func TestPrometheus(t *testing.T) {
-	tsdb := ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")
+	tsdb := ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")
 
 	if result, err := tsdb.Query(context.Background(), BaseQuery); err != nil {
 		t.Errorf("got an error: %v", err)
@@ -62,7 +62,7 @@ func TestAllTSDBs(t *testing.T) {
 		name string
 		db   ts.TSDB
 	}{
-		{name: "Prometheus", db: ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090")},
+		{name: "Prometheus", db: ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")},
 		{name: "Mimir", db: ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
 		{name: "InfluxDB", db: ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)},
 	}

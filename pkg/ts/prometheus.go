@@ -3,17 +3,41 @@ package ts
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
+type withBasicAuthRoundTripper struct {
+	username string
+	password string
+	next     http.RoundTripper
+}
+
+func (r *withBasicAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	if r.username != "" && r.password != "" {
+		req.SetBasicAuth(r.username, r.password)
+	}
+
+	return r.next.RoundTrip(req)
+}
+
 type PrometheusClient struct {
 	Client v1.API
 }
 
-func NewPrometheusClient(url string) PrometheusClient {
-	cfg := api.Config{Address: url}
+func NewPrometheusClient(url string, username string, password string) PrometheusClient {
+	roundTripper := withBasicAuthRoundTripper{
+		username: username,
+		password: password,
+		next:     http.DefaultTransport.(*http.Transport).Clone(),
+	}
+
+	cfg := api.Config{
+		Address:      url,
+		RoundTripper: &roundTripper,
+	}
 	httpClient, err := api.NewClient(cfg)
 
 	if err != nil {
