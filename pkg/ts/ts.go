@@ -44,7 +44,7 @@ type TSDB interface {
 func NewTSDBClient(config *Config) (TSDB, error) {
 	switch config.Name {
 	case "prometheus":
-		return NewPrometheusClient(config.URL), nil
+		return NewPrometheusClient(config.URL, config.ID, config.Secret), nil
 	case "mimir":
 		return NewMimirClient(config.URL, config.Org), nil
 	case "influxDB":
