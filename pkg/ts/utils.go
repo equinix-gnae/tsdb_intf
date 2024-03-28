@@ -8,10 +8,10 @@ import (
 )
 
 // Query String Example => query := `bits{index_num="bb1-ngn.gv51.1001"}`
-func GeneratePromQueryString(query TSQuery) string {
+func generateInstantVector(query TSQuery) string {
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString(query.Table)
 
+	queryBuilder.WriteString(query.Table)
 	queryBuilder.WriteString("{")
 	for k, v := range query.Filters {
 		queryBuilder.WriteString(fmt.Sprintf("%s=%q, ", k, v))
@@ -19,6 +19,32 @@ func GeneratePromQueryString(query TSQuery) string {
 	queryBuilder.WriteString("}")
 
 	return queryBuilder.String()
+}
+
+// Query String Example => query := `rate(bits{index_num="bb1-ngn.gv51.1001"}[5m])`
+func applyPromFunctions(queryStr *string, functions []QueryFunction) error {
+	for _, queryFunction := range functions {
+		switch t := queryFunction.(type) {
+		case Rate:
+			promRate(t).Apply(queryStr)
+		case Sum:
+			promSum(t).Apply(queryStr)
+		default:
+			return fmt.Errorf("unsupported Function: %v", queryFunction)
+		}
+	}
+	return nil
+}
+
+func GeneratePromQueryString(query TSQuery) (string, error) {
+	queryStr := generateInstantVector(query)
+
+	if err := applyPromFunctions(&queryStr, query.Functions); err != nil {
+		return "", err
+	}
+
+	fmt.Printf("query: %q", queryStr)
+	return queryStr, nil
 }
 
 func PromQueryResultToTS(promQueryResult model.Value, strQuery string) (TSQueryResult, error) {

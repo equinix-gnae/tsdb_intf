@@ -11,6 +11,20 @@ import (
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
 
+type influxRate Rate
+
+func (r influxRate) Apply(queryStr *string) (err error) {
+	*queryStr += fmt.Sprintf("\n|> derivative(unit:%v, nonNegative: true)", r.Range)
+	return nil
+}
+
+type influxSum Sum
+
+func (r influxSum) Apply(queryStr *string) (err error) {
+	*queryStr += "\n|> sum()"
+	return nil
+}
+
 type InfluxDBClient struct {
 	Client influxdb2.Client
 	Bucket string
@@ -36,7 +50,12 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, query.Timeout)
 	defer cancel()
 
-	strQuery := r.GenerateQueryString(query)
+	strQuery, err := r.GenerateQueryString(query)
+
+	if err != nil {
+		return nil, err
+	}
+
 	queryAPI := r.Client.QueryAPI(r.Org)
 	resp, err := queryAPI.Query(ctxWithTimeout, strQuery)
 
@@ -86,6 +105,20 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 	return returnResult, nil
 }
 
+func applyInfluxFunctions(queryStr *string, functions []QueryFunction) error {
+	for _, queryFunction := range functions {
+		switch t := queryFunction.(type) {
+		case Rate:
+			influxRate(t).Apply(queryStr)
+		case Sum:
+			influxSum(t).Apply(queryStr)
+		default:
+			return fmt.Errorf("unsupported Function: %v", queryFunction)
+		}
+	}
+	return nil
+}
+
 /*
 	 Query String Example:
 		query := `from(bucket: "testing_script")
@@ -96,7 +129,7 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
 		`
 */
-func (r InfluxDBClient) GenerateQueryString(query TSQuery) string {
+func (r InfluxDBClient) GenerateQueryString(query TSQuery) (string, error) {
 	var queryBuilder strings.Builder
 
 	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
@@ -117,5 +150,10 @@ func (r InfluxDBClient) GenerateQueryString(query TSQuery) string {
 		queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
 	}
 
-	return queryBuilder.String()
+	queryStr := queryBuilder.String()
+	if err := applyInfluxFunctions(&queryStr, query.Functions); err != nil {
+		return "", err
+	}
+
+	return queryStr, nil
 }
