@@ -24,7 +24,12 @@ func NewMimirClient(address string, id string) MimirClient {
 func (r MimirClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
 	// XXX: handle the case where client is shared b/w goroutines?
 	r.Client.SetTimeout(query.Timeout)
-	strQuery := GeneratePromQueryString(query)
+	strQuery, err := GeneratePromQueryString(query)
+
+	if err != nil {
+		return nil, err
+	}
+
 	resp, err := r.Client.QueryRange(strQuery, query.StartTime, query.EndTime, query.Step)
 
 	if err != nil {

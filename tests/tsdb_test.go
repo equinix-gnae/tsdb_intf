@@ -11,11 +11,13 @@ import (
 )
 
 var BaseQuery = ts.TSQuery{
-	Table:     "bits",
-	StartTime: time.Now().Add(-1 * time.Hour),
-	EndTime:   time.Now().UTC(),
+	Table: "bits",
+	//StartTime: time.Now().Add(-1 * time.Hour),
+	//EndTime:   time.Now().UTC(),
+	StartTime: time.Date(2024, time.March, 21, 0, 0, 0, 0, time.UTC),
+	EndTime:   time.Date(2024, time.March, 22, 0, 0, 0, 0, time.UTC),
 	Filters:   map[string]string{"index_num": "use4-ngn.gv52.4"},
-	GroupBy:   []string{"index_num", "_measurement"},
+	GroupBy:   []string{"index_num"},
 	Step:      time.Minute * 5,
 	Timeout:   time.Second * 30,
 }

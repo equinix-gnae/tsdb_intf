@@ -29,6 +29,7 @@ bad_data: invalid parameter "step": zero or negative query resolution step width
 type TSQuery struct {
 	Table     string            `json:"table"`   // for prometheus the table is metric name, for influx the table is _field
 	Filters   map[string]string `json:"filters"` // for prometheus filters are kv lables, for influx they are `where` clause
+	Functions []QueryFunction   `json:"functions"`
 	GroupBy   []string          `json:"groupBy"` // used by influx to generate group key which is common for a TS
 	StartTime time.Time         `json:"startTime"`
 	EndTime   time.Time         `json:"endTime"`
@@ -36,7 +37,6 @@ type TSQuery struct {
 	Step      time.Duration     `json:"step"`
 }
 
-// read-only
 type TSDB interface {
 	Query(ctx context.Context, query TSQuery) (TSQueryResult, error)
 }

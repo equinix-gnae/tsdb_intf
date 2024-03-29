@@ -9,6 +9,21 @@ import (
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
+type promRate Rate
+
+func (r promRate) Apply(queryStr *string) (err error) {
+
+	*queryStr = "rate(" + *queryStr + "[" + r.Range.String() + "]" + ")"
+	return err
+}
+
+type promSum Sum
+
+func (r promSum) Apply(queryStr *string) (err error) {
+	*queryStr = "sum (" + *queryStr + ")"
+	return err
+}
+
 type withBasicAuthRoundTripper struct {
 	username string
 	password string
@@ -55,7 +70,11 @@ func NewPrometheusClient(url string, username string, password string) Prometheu
 
 func (r PrometheusClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
 	Range := v1.Range{Start: query.StartTime, End: query.EndTime, Step: query.Step}
-	strQuery := GeneratePromQueryString(query)
+	strQuery, err := GeneratePromQueryString(query)
+
+	if err != nil {
+		return nil, err
+	}
 
 	resp, warn, err := r.Client.QueryRange(ctx, strQuery, Range, v1.WithTimeout(query.Timeout))
 
