@@ -1,9 +1,10 @@
-package ts
+package prometheus
 
 import (
 	"context"
 	"log"
 
+	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	"github.com/grafana/mimir/integration/e2emimir"
 )
 
@@ -21,7 +22,7 @@ func NewMimirClient(address string, id string) MimirClient {
 	return MimirClient{Client: mimirE2eClient}
 }
 
-func (r MimirClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
+func (r MimirClient) Query(ctx context.Context, query ts.TSQuery) (ts.TSQueryResult, error) {
 	// XXX: handle the case where client is shared b/w goroutines?
 	r.Client.SetTimeout(query.Timeout)
 	strQuery, err := GeneratePromQueryString(query)

@@ -1,4 +1,4 @@
-package ts
+package influxdb
 
 import (
 	"context"
@@ -8,22 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 )
-
-type influxRate Rate
-
-func (r influxRate) Apply(queryStr *string) (err error) {
-	*queryStr += fmt.Sprintf("\n|> derivative(unit:%v, nonNegative: true)", r.Range)
-	return nil
-}
-
-type influxSum Sum
-
-func (r influxSum) Apply(queryStr *string) (err error) {
-	*queryStr += "\n|> sum()"
-	return nil
-}
 
 type InfluxDBClient struct {
 	Client influxdb2.Client
@@ -46,7 +33,7 @@ func NewInfluxDBClient(url string, token string, bucket string, org string, opti
 	return InfluxDBClient{Client: influxClient, Bucket: bucket, Org: org}
 }
 
-func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
+func (r InfluxDBClient) Query(ctx context.Context, query ts.TSQuery) (ts.TSQueryResult, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, query.Timeout)
 	defer cancel()
 
@@ -66,7 +53,7 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 	// caution: result.TableChanged() is not working for some reason that why we are using
 	// preTableId/currentTableId to implement the logic to figure out if table has changed
 	preTableId := -1
-	returnResult := make(TSQueryResult, 0, 10)
+	returnResult := make(ts.TSQueryResult, 0, 10)
 
 	for resp.Next() {
 		// Notice when group key has changed
@@ -83,9 +70,9 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 			for key, val := range record.Values() {
 				labels[key] = fmt.Sprintf("%v", val)
 			}
-			returnResult = append(returnResult, TimeSeries{
+			returnResult = append(returnResult, ts.TimeSeries{
 				Labels:          labels,
-				TimeValueSeries: make([]TimeValue, 0, 10),
+				TimeValueSeries: make([]ts.TimeValue, 0, 10),
 			})
 			preTableId = currentTableId
 		}
@@ -93,7 +80,7 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 		// same TS: update the TSVals of the last element in
 		returnResult[len(returnResult)-1].TimeValueSeries = append(
 			returnResult[len(returnResult)-1].TimeValueSeries,
-			TimeValue{Time: record.Time().UnixMilli(), Value: record.Value().(float64)},
+			ts.TimeValue{Time: record.Time().UnixMilli(), Value: record.Value().(float64)},
 		)
 
 	}
@@ -103,20 +90,6 @@ func (r InfluxDBClient) Query(ctx context.Context, query TSQuery) (TSQueryResult
 	}
 
 	return returnResult, nil
-}
-
-func applyInfluxFunctions(queryStr *string, functions []QueryFunction) error {
-	for _, queryFunction := range functions {
-		switch t := queryFunction.(type) {
-		case Rate:
-			influxRate(t).Apply(queryStr)
-		case Sum:
-			influxSum(t).Apply(queryStr)
-		default:
-			return fmt.Errorf("unsupported Function: %v", queryFunction)
-		}
-	}
-	return nil
 }
 
 /*
@@ -129,7 +102,7 @@ func applyInfluxFunctions(queryStr *string, functions []QueryFunction) error {
 		|> aggregateWindow(every: 5m, fn: last, createEmpty: false)
 		`
 */
-func (r InfluxDBClient) GenerateQueryString(query TSQuery) (string, error) {
+func (r InfluxDBClient) GenerateQueryString(query ts.TSQuery) (string, error) {
 	var queryBuilder strings.Builder
 
 	queryBuilder.WriteString(fmt.Sprintf("from(bucket: %q)\n", r.Bucket))
@@ -151,9 +124,46 @@ func (r InfluxDBClient) GenerateQueryString(query TSQuery) (string, error) {
 	}
 
 	queryStr := queryBuilder.String()
-	if err := applyInfluxFunctions(&queryStr, query.Functions); err != nil {
+	if err := applyFunctions(&queryStr, query.Functions); err != nil {
+		return "", err
+	}
+
+	if err := applyOperations(&queryStr, query.Operations); err != nil {
 		return "", err
 	}
 
 	return queryStr, nil
+}
+
+func applyFunctions(queryStr *string, functions []ts.QueryFunction) error {
+	for _, queryFunction := range functions {
+		switch t := queryFunction.(type) {
+		case ts.Rate:
+			rate(t).Apply(queryStr)
+		case ts.Sum:
+			sum(t).Apply(queryStr)
+		default:
+			return fmt.Errorf("unsupported Function: %v", queryFunction)
+		}
+	}
+	return nil
+}
+
+// Query String Example => query := `rate(bits{index_num="bb1-ngn.gv51.1001"}[5m])`
+func applyOperations(queryStr *string, operations []ts.QueryOperation) error {
+	for _, operation := range operations {
+		switch t := operation.(type) {
+		case ts.Add:
+			add(t).Apply(queryStr)
+		case ts.Sub:
+			sub(t).Apply(queryStr)
+		case ts.Multiply:
+			multiply(t).Apply(queryStr)
+		case ts.Divide:
+			divide(t).Apply(queryStr)
+		default:
+			return fmt.Errorf("unsupported operation: %v", operation)
+		}
+	}
+	return nil
 }
