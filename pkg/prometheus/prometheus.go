@@ -1,28 +1,14 @@
-package ts
+package prometheus
 
 import (
 	"context"
 	"log"
 	"net/http"
 
+	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	"github.com/prometheus/client_golang/api"
 	v1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
-
-type promRate Rate
-
-func (r promRate) Apply(queryStr *string) (err error) {
-
-	*queryStr = "rate(" + *queryStr + "[" + r.Range.String() + "]" + ")"
-	return err
-}
-
-type promSum Sum
-
-func (r promSum) Apply(queryStr *string) (err error) {
-	*queryStr = "sum (" + *queryStr + ")"
-	return err
-}
 
 type withBasicAuthRoundTripper struct {
 	username string
@@ -68,7 +54,7 @@ func NewPrometheusClient(url string, username string, password string) Prometheu
 	return PrometheusClient{Client: v1API}
 }
 
-func (r PrometheusClient) Query(ctx context.Context, query TSQuery) (TSQueryResult, error) {
+func (r PrometheusClient) Query(ctx context.Context, query ts.TSQuery) (ts.TSQueryResult, error) {
 	Range := v1.Range{Start: query.StartTime, End: query.EndTime, Step: query.Step}
 	strQuery, err := GeneratePromQueryString(query)
 

@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/equinix-gnae/tsdb_intf/pkg/influxdb"
+	"github.com/equinix-gnae/tsdb_intf/pkg/prometheus"
 	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/kr/pretty"
@@ -23,7 +25,7 @@ var BaseQuery = ts.TSQuery{
 }
 
 func TestPrometheus(t *testing.T) {
-	tsdb := ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")
+	tsdb := prometheus.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")
 
 	if result, err := tsdb.Query(context.Background(), BaseQuery); err != nil {
 		t.Errorf("got an error: %v", err)
@@ -33,7 +35,7 @@ func TestPrometheus(t *testing.T) {
 
 }
 func TestMimir(t *testing.T) {
-	tsdb := ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
+	tsdb := prometheus.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")
 
 	if result, err := tsdb.Query(context.Background(), BaseQuery); err != nil {
 		t.Errorf("got an error: %v", err)
@@ -46,7 +48,7 @@ func TestMimir(t *testing.T) {
 func TestInfluxDB(t *testing.T) {
 	options := influxdb2.DefaultOptions()
 	options.SetLogLevel(3)
-	tsdb := ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)
+	tsdb := influxdb.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)
 
 	if result, err := tsdb.Query(context.Background(), BaseQuery); err != nil {
 		t.Errorf("got an error: %v", err)
@@ -64,9 +66,9 @@ func TestAllTSDBs(t *testing.T) {
 		name string
 		db   ts.TSDB
 	}{
-		{name: "Prometheus", db: ts.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")},
-		{name: "Mimir", db: ts.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
-		{name: "InfluxDB", db: ts.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)},
+		{name: "Prometheus", db: prometheus.NewMimirClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "")},
+		{name: "Mimir", db: prometheus.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
+		{name: "InfluxDB", db: influxdb.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)},
 	}
 
 	for _, tsdb := range tsdbs {

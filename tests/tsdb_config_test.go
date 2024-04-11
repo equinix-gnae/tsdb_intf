@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/equinix-gnae/tsdb_intf/pkg/ts"
+	"github.com/equinix-gnae/tsdb_intf/pkg/utils"
 	"github.com/kr/pretty"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -24,7 +25,7 @@ func TestConfig(t *testing.T) {
 
 func TestTSDBObjUsingConfig(t *testing.T) {
 	config := ts.ConfigFromViper(v)
-	tsdb, err := ts.NewTSDBClient(&config)
+	tsdb, err := utils.NewTSDBClient(&config)
 
 	if err != nil {
 		t.Errorf("got an error: %v", err)
