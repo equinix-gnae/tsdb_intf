@@ -109,18 +109,12 @@ func (r InfluxDBClient) GenerateQueryString(query ts.TSQuery) (string, error) {
 	queryBuilder.WriteString(fmt.Sprintf("|> range( start: %s, stop: %s)\n", query.StartTime.Format(time.RFC3339), query.EndTime.Format(time.RFC3339)))
 	queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[\"_field\"] == %q)\n", query.Table))
 
+	if query.Filters != nil && len(query.Filters) > 0 {
+		queryBuilder.WriteString("// filters\n")
+	}
+
 	for k, v := range query.Filters {
 		queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] == %q)\n", k, v))
-	}
-
-	// TODO: add "_measurement" and "_field" by default for groupBy key? or its upto query maker?
-	if len(query.GroupBy) > 0 {
-		groupKey, _ := json.Marshal(query.GroupBy)
-		queryBuilder.WriteString(fmt.Sprintf("|> group (columns: %s)\n", groupKey))
-	}
-
-	if query.Step != 0 {
-		queryBuilder.WriteString(fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step))
 	}
 
 	queryStr := queryBuilder.String()
@@ -132,10 +126,25 @@ func (r InfluxDBClient) GenerateQueryString(query ts.TSQuery) (string, error) {
 		return "", err
 	}
 
+	queryStr += "// others\n"
+	// TODO: add "_measurement" and "_field" by default for groupBy key? or its upto query maker?
+	if len(query.GroupBy) > 0 {
+		groupKey, _ := json.Marshal(query.GroupBy)
+		queryStr += fmt.Sprintf("|> group (columns: %s)\n", groupKey)
+	}
+
+	if query.Step != 0 {
+		queryStr += fmt.Sprintf("|> aggregateWindow(every: %s, fn: last, createEmpty: false)", query.Step)
+	}
+
 	return queryStr, nil
 }
 
 func applyFunctions(queryStr *string, functions []ts.QueryFunction) error {
+	if len(functions) > 0 {
+		*queryStr += "// functions\n"
+	}
+
 	for _, queryFunction := range functions {
 		switch t := queryFunction.(type) {
 		case ts.Rate:
@@ -151,6 +160,9 @@ func applyFunctions(queryStr *string, functions []ts.QueryFunction) error {
 
 // Query String Example => query := `rate(bits{index_num="bb1-ngn.gv51.1001"}[5m])`
 func applyOperations(queryStr *string, operations []ts.QueryOperation) error {
+	if len(operations) > 0 {
+		*queryStr += "// operations\n"
+	}
 	for _, operation := range operations {
 		switch t := operation.(type) {
 		case ts.Add:

@@ -1,10 +1,15 @@
 package ts
 
-/* All the query operations can specify operation query result using '$' sign
+/*
+All the query operations can specify operation query result using '$' sign
 
 Example:
 ========
 	Add{Left: '$', Right, '10'} => queryResult + 10
+
+
+Note: Operations should be applied after the functions like
+
 */
 
 type QueryOperation interface {

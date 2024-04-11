@@ -7,47 +7,35 @@ import (
 type add ts.Add
 
 func (r add) Apply(queryStr *string) (err error) {
-	if r.Left == "$" {
-		*queryStr = *queryStr + " + " + r.Right
-	} else {
-		*queryStr = r.Left + " + " + *queryStr
-	}
-
+	applyOperation(queryStr, "+", r.Left, r.Right)
 	return nil
 }
 
 type sub ts.Sub
 
 func (r sub) Apply(queryStr *string) (err error) {
-	if r.Left == "$" {
-		*queryStr = *queryStr + " - " + r.Right
-	} else {
-		*queryStr = r.Left + " - " + *queryStr
-	}
-
+	applyOperation(queryStr, "-", r.Left, r.Right)
 	return nil
 }
 
 type multiply ts.Multiply
 
 func (r multiply) Apply(queryStr *string) (err error) {
-	if r.Left == "$" {
-		*queryStr = *queryStr + " * " + r.Right
-	} else {
-		*queryStr = r.Left + " * " + *queryStr
-	}
-
+	applyOperation(queryStr, "*", r.Left, r.Right)
 	return nil
 }
 
 type divide ts.Divide
 
 func (r divide) Apply(queryStr *string) (err error) {
-	if r.Left == "$" {
-		*queryStr = *queryStr + " / " + r.Right
-	} else {
-		*queryStr = r.Left + " / " + *queryStr
-	}
-
+	applyOperation(queryStr, "/", r.Left, r.Right)
 	return nil
+}
+
+func applyOperation(queryStr *string, op, left, right string) {
+	if left == "$" {
+		*queryStr = "(" + *queryStr + " " + op + " " + right + ") "
+	} else {
+		*queryStr = "(" + left + " " + op + " " + *queryStr + ") "
+	}
 }
