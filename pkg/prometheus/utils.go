@@ -43,8 +43,8 @@ func applyOperations(queryStr *string, operations []ts.QueryOperation) error {
 		switch t := operation.(type) {
 		case ts.Add:
 			add(t).Apply(queryStr)
-		case ts.Sub:
-			sub(t).Apply(queryStr)
+		case ts.Substract:
+			substract(t).Apply(queryStr)
 		case ts.Multiply:
 			multiply(t).Apply(queryStr)
 		case ts.Divide:
