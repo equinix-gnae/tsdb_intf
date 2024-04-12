@@ -25,12 +25,12 @@ func (r Add) Apply(queryStr *string) (err error) {
 	panic("Apply should be implemented by TSDB driver")
 }
 
-type Substract struct {
+type Subtract struct {
 	Left  string `json:"left"`
 	Right string `json:"right"`
 }
 
-func (r Substract) Apply(queryStr *string) (err error) {
+func (r Subtract) Apply(queryStr *string) (err error) {
 	panic("Apply should be implemented by TSDB driver")
 }
 

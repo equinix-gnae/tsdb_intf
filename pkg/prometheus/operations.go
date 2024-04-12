@@ -11,9 +11,9 @@ func (r add) Apply(queryStr *string) (err error) {
 	return nil
 }
 
-type substract ts.Substract
+type subtract ts.Subtract
 
-func (r substract) Apply(queryStr *string) (err error) {
+func (r subtract) Apply(queryStr *string) (err error) {
 	applyOperation(queryStr, "-", r.Left, r.Right)
 	return nil
 }
