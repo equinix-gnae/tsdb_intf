@@ -16,9 +16,9 @@ var BaseQuery = ts.TSQuery{
 	Table: "bits",
 	//StartTime: time.Now().Add(-1 * time.Hour),
 	//EndTime:   time.Now().UTC(),
-	StartTime: time.Date(2024, time.March, 21, 0, 0, 0, 0, time.UTC),
-	EndTime:   time.Date(2024, time.March, 22, 0, 0, 0, 0, time.UTC),
-	Filters:   map[string]string{"index_num": "use4-ngn.gv52.4"},
+	StartTime: time.Date(2024, time.May, 8, 0, 0, 0, 0, time.UTC),
+	EndTime:   time.Date(2024, time.May, 9, 0, 0, 0, 0, time.UTC),
+	Filters:   []ts.TSQueryFilter{{Key: "index_num", Value: "use4-ngn.gv52.4", Regex: false, Not: false}},
 	GroupBy:   []string{"index_num"},
 	Step:      time.Minute * 5,
 	Timeout:   time.Second * 30,
@@ -66,7 +66,7 @@ func TestAllTSDBs(t *testing.T) {
 		name string
 		db   ts.TSDB
 	}{
-		{name: "Prometheus", db: prometheus.NewMimirClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "")},
+		{name: "Prometheus", db: prometheus.NewPrometheusClient("http://mgmtsrv1.sv11.edn.equinix.com:32090", "", "")},
 		{name: "Mimir", db: prometheus.NewMimirClient("sv5-edn-mimir-stg.lab.equinix.com", "eot-telemetry")},
 		{name: "InfluxDB", db: influxdb.NewInfluxDBClient("http://devsv3ednmgmt09.lab.equinix.com:30320", "mytoken", "testing_script", "primary", options)},
 	}

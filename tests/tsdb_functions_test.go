@@ -16,7 +16,7 @@ var BaseQueryWithFunc = ts.TSQuery{
 	Table:     "bits",
 	StartTime: time.Date(2024, time.April, 8, 0, 0, 0, 0, time.UTC),
 	EndTime:   time.Date(2024, time.April, 9, 0, 0, 0, 0, time.UTC),
-	Filters:   map[string]string{"index_num": "use4-ngn.gv52.4"},
+	Filters:   []ts.TSQueryFilter{{Key: "index_num", Value: "use4-ngn.gv52.4", Regex: false, Not: false}},
 	GroupBy:   []string{"index_num"},
 	Step:      time.Minute * 5,
 	Timeout:   time.Second * 30,

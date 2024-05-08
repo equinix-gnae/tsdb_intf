@@ -14,12 +14,38 @@ func generateInstantVector(query ts.TSQuery) string {
 
 	queryBuilder.WriteString(query.Table)
 	queryBuilder.WriteString("{")
-	for k, v := range query.Filters {
-		queryBuilder.WriteString(fmt.Sprintf("%s=%q, ", k, v))
+
+	for _, tsQueryFilter := range query.Filters {
+		queryBuilder.WriteString(fmt.Sprintf("%s%s%q, ", tsQueryFilter.Key, generateEqualalityOperator(tsQueryFilter), tsQueryFilter.Value))
 	}
 	queryBuilder.WriteString("}")
 
 	return queryBuilder.String()
+}
+
+/*
+= : Select labels that are exactly equal to the provided string.
+!=: Select labels that are not equal to the provided string.
+=~: Select labels that regex-match the provided string.
+!~: Select labels that do not regex-match the provided string.
+*/
+func generateEqualalityOperator(tsQueryFilter ts.TSQueryFilter) string {
+	var operatorBuilder strings.Builder
+
+	if tsQueryFilter.Regex {
+		if tsQueryFilter.Not {
+			operatorBuilder.WriteString("!")
+		} else {
+			operatorBuilder.WriteString("=")
+		}
+		operatorBuilder.WriteString("~")
+	} else {
+		if tsQueryFilter.Not {
+			operatorBuilder.WriteString("!")
+		}
+		operatorBuilder.WriteString("=")
+	}
+	return operatorBuilder.String()
 }
 
 // Query String Example => query := `rate(bits{index_num="bb1-ngn.gv51.1001"}[5m])`

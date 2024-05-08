@@ -93,6 +93,33 @@ func (r InfluxDBClient) Query(ctx context.Context, query ts.TSQuery) (ts.TSQuery
 }
 
 /*
+= : Select labels that are exactly equal to the provided string.
+!=: Select labels that are not equal to the provided string.
+=~: Select labels that regex-match the provided string.
+!~: Select labels that do not regex-match the provided string.
+*/
+func generateEqualalityOperator(tsQueryFilter ts.TSQueryFilter) string {
+	var operatorBuilder strings.Builder
+
+	if tsQueryFilter.Regex {
+		if tsQueryFilter.Not {
+			operatorBuilder.WriteString("!")
+		} else {
+			operatorBuilder.WriteString("=")
+		}
+		operatorBuilder.WriteString("~")
+	} else {
+		if tsQueryFilter.Not {
+			operatorBuilder.WriteString("!")
+		} else {
+			operatorBuilder.WriteString("=")
+		}
+		operatorBuilder.WriteString("=")
+	}
+	return operatorBuilder.String()
+}
+
+/*
 	 Query String Example:
 		query := `from(bucket: "testing_script")
 		|> range( start: 2024-02-05, stop: 2024-02-09)
@@ -113,8 +140,13 @@ func (r InfluxDBClient) GenerateQueryString(query ts.TSQuery) (string, error) {
 		queryBuilder.WriteString("// filters\n")
 	}
 
-	for k, v := range query.Filters {
-		queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] == %q)\n", k, v))
+	for _, tsQueryFilter := range query.Filters {
+		if tsQueryFilter.Regex {
+			queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] %s /%s/)\n", tsQueryFilter.Key, generateEqualalityOperator(tsQueryFilter), tsQueryFilter.Value))
+		} else {
+			queryBuilder.WriteString(fmt.Sprintf("|> filter(fn: (r) => r[%q] %s %q)\n", tsQueryFilter.Key, generateEqualalityOperator(tsQueryFilter), tsQueryFilter.Value))
+		}
+
 	}
 
 	queryStr := queryBuilder.String()
